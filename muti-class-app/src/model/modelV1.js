@@ -4,7 +4,6 @@ import * as tf from '@tensorflow/tfjs';
 
 export default class ModelV1 {
     model;
-    class = '0123456789';
     constructor() {
         this.model = this.loadModel().then();
     }
@@ -19,10 +18,12 @@ export default class ModelV1 {
             // scale it down to smaller than target
             tensor = tf.image.resizeBilinear(tensor, [28, 28]);
 
+            tensor = tensor.div(255.0);
+
             // tensor = tensor.div(255);
             // console.log(tensor);
             // Reshape again to fit training model [1, 28, 28]
-            return tensor.reshape([1, 28, 28]);
+            return tensor.reshape([1, 28, 28, 1]);
         });
     }
 
@@ -35,9 +36,8 @@ export default class ModelV1 {
     async predict(data) {
         // prediction of img must have a shape of (1,28,28)
         const prediction = await (await this.model).predict(data).as1D();
-        // console.log(prediction.dataSync());
         const argMax = prediction.argMax().dataSync()[0];
         // console.log(argMax);
-        return argMax;
+        return { y_pred: argMax, y_prods: tf.mul(prediction.dataSync(), 100) };
     }
 }
